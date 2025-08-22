@@ -21,10 +21,6 @@ module tb ();
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
 
-  // Debug signals
-  wire [7:0] acc_debug;
-  wire [3:0] state_debug;
-
   // Gate-level power pins
 `ifdef GL_TEST
   wire VPWR = 1'b1;
@@ -44,10 +40,7 @@ module tb ();
     .uio_oe(uio_oe),
     .ena(ena),
     .clk(clk),
-    .rst_n(rst_n),
-    // Connect debug outputs
-    .acc_debug(acc_debug),
-    .state_debug(state_debug)
+    .rst_n(rst_n)
   );
 
   // Drive wires from regs
@@ -65,40 +58,30 @@ module tb ();
     rst_n = 0;
     ena = 1;
     ui_in_reg = 8'b00000000;
-    uio_in_reg = 8'b00000000;  // Set initial value for uio_in_reg
+    uio_in_reg = 8'b00000000;
     #10;
     rst_n = 1;
 
-    // Example input program stimulus
+    // Example input program stimulus (your FSM input sequence)
     ui_in_reg = 8'h41;
-    uio_in_reg = 8'hFF;  // Example value for uio_in
     #10;
     ui_in_reg = 8'h42;
-    uio_in_reg = 8'hAA;  // Set uio_in value
     #10;
     ui_in_reg = 8'h81;
-    uio_in_reg = 8'h55;  // Set uio_in value
     #10;
     ui_in_reg = 8'h82;
-    uio_in_reg = 8'h11;  // Set uio_in value
     #10;
     ui_in_reg = 8'hC0;
-    uio_in_reg = 8'h22;  // Set uio_in value
     #10;
     ui_in_reg = 8'h44;
-    uio_in_reg = 8'h33;  // Set uio_in value
     #10;
     ui_in_reg = 8'h83;
-    uio_in_reg = 8'h44;  // Set uio_in value
     #10;
     ui_in_reg = 8'hC0;
-    uio_in_reg = 8'h55;  // Set uio_in value
     #10;
     ui_in_reg = 8'h00;
-    uio_in_reg = 8'h00;  // Set uio_in value
     #10;
     ui_in_reg = 8'h00;
-    uio_in_reg = 8'h00;  // Set uio_in value
     #20;  // Wait extra cycles to allow simulator to finish
 
     //$display("Simulation finished. Final uo_out: %02x", uo_out);
@@ -107,8 +90,8 @@ module tb ();
 
   // Output monitoring
   initial begin
-    $monitor("Time=%0t | ui_in=%02x | uo_out=%02x | uio_out=%02x | uio_oe=%02x | acc_debug=%02x | state_debug=%01x",
-             $time, ui_in, uo_out, uio_out, uio_oe, acc_debug, state_debug);
+    $monitor("Time=%0t | ui_in=%02x | uo_out=%02x | uio_out=%02x | uio_oe=%02x",
+             $time, ui_in, uo_out, uio_out, uio_oe);
   end
 
 endmodule
