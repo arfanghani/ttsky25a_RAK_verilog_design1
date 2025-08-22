@@ -4,7 +4,7 @@ project:
   discord:      ""
   description:  "FSM-based ALU with basic control and arithmetic operations"
   language:     "Verilog"
-  clock_hz:     50MHz
+  clock_hz:     50000000
   tiles:        "1x1"
   top_module:   "tt_um_alu_fsm"
   source_files:
