@@ -8,12 +8,8 @@ module tt_um_mac (
   input wire [7:0] ui_in,
   input wire [7:0] uio_in,
   output reg [7:0] uo_out,
-  output reg [7:0] uio_out,
-  output reg [7:0] uio_oe,
-
-  // Debug outputs for observability
-  output reg [7:0] acc_debug,
-  output reg [3:0] state_debug
+  output wire [7:0] uio_out,
+  output wire [7:0] uio_oe
 );
 
   // Internal registers
@@ -27,21 +23,21 @@ module tt_um_mac (
   localparam STORE = 4'd3;
   localparam DONE  = 4'd4;
 
-  // Simple FSM example logic, modify according to your real design
+  // For this example, uio_out and uio_oe are driven to 0 (you can modify as needed)
+  assign uio_out = 8'd0;
+  assign uio_oe  = 8'd0;
+
+  // Simple FSM example logic
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       acc <= 8'd0;
       state <= IDLE;
       uo_out <= 8'd0;
-      uio_out <= 8'd0;
-      uio_oe <= 8'd0;
     end else if (ena) begin
       case(state)
         IDLE: begin
           acc <= 8'd0;
           uo_out <= 8'd0;
-          uio_out <= 8'd0;  // Default value
-          uio_oe <= 8'd0;   // Disable output
           if (ui_in != 8'd0)
             state <= LOAD;
         end
@@ -49,48 +45,29 @@ module tt_um_mac (
         LOAD: begin
           acc <= ui_in;      // Load input into acc
           uo_out <= acc;
-          uio_out <= acc;    // Set uio_out to the acc value
-          uio_oe <= 8'd1;    // Enable output
           state <= ADD;
         end
 
         ADD: begin
           acc <= acc + 8'h08; // Add constant 0x08 for demo
           uo_out <= acc;
-          uio_out <= acc;    // Update uio_out to the new acc value
-          uio_oe <= 8'd1;    // Enable output
           state <= STORE;
         end
 
         STORE: begin
           uo_out <= acc;     // Output acc value
-          uio_out <= acc;    // Update uio_out
-          uio_oe <= 8'd1;    // Enable output
           state <= DONE;
         end
 
         DONE: begin
           // Hold acc value and output latched
           uo_out <= acc;
-          uio_out <= acc;    // Maintain the final output value
-          uio_oe <= 8'd0;    // Disable output once done
           // Optional: transition back to IDLE or other state after some condition
-          if (acc == 8'h00) state <= IDLE;  // Transition to IDLE after done
+          if (acc == 8'h00) state <= IDLE;  // Transition to IDLE after done if needed
         end
 
         default: state <= IDLE;
       endcase
-    end
-  end
-
-  // Drive debug outputs
-  always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      acc_debug <= 8'd0;
-      state_debug <= 4'd0;
-    end else begin
-      acc_debug <= acc;
-      state_debug <= state;
     end
   end
 
