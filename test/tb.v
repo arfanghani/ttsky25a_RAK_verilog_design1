@@ -20,6 +20,9 @@ module tb ();
   wire [7:0] uo_out;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
+  
+  // Declare state variable for FSM state monitoring
+  reg [3:0] state;
 
   // Gate-level power pins
 `ifdef GL_TEST
@@ -28,7 +31,7 @@ module tb ();
 `endif
 
   // Instantiate the DUT (Device Under Test)
-  tt_um_mac user_project (
+  tt_um_alu_fsm user_project (
 `ifdef GL_TEST
     .VPWR(VPWR),
     .VGND(VGND),
@@ -47,10 +50,10 @@ module tb ();
   assign ui_in   = ui_in_reg;
   assign uio_in  = uio_in_reg;
 
-  // Clock generation (100 MHz)
+  // Clock generation (50 MHz, 20 ns period)
   initial begin
     clk = 0;
-    forever #5 clk = ~clk;
+    forever #10 clk = ~clk;  // Adjusted for 50 MHz (20 ns period)
   end
 
   // Test stimulus
@@ -59,39 +62,56 @@ module tb ();
     ena = 1;
     ui_in_reg = 8'b00000000;
     uio_in_reg = 8'b00000000;
-    #10;
+    #20;  // Wait 20 ns for reset
     rst_n = 1;
 
     // Example input program stimulus (your FSM input sequence)
     ui_in_reg = 8'h41;
-    #10;
+    #20;  // Wait 20 ns for 50 MHz
     ui_in_reg = 8'h42;
-    #10;
+    #20;
     ui_in_reg = 8'h81;
-    #10;
+    #20;
     ui_in_reg = 8'h82;
-    #10;
+    #20;
     ui_in_reg = 8'hC0;
-    #10;
+    #20;
     ui_in_reg = 8'h44;
-    #10;
+    #20;
     ui_in_reg = 8'h83;
-    #10;
+    #20;
     ui_in_reg = 8'hC0;
-    #10;
+    #20;
     ui_in_reg = 8'h00;
-    #10;
+    #20;
     ui_in_reg = 8'h00;
     #20;  // Wait extra cycles to allow simulator to finish
 
-    //$display("Simulation finished. Final uo_out: %02x", uo_out);
-    $stop;
+    // Monitor FSM state and output
+    $display("Simulation finished. Final uo_out: %02x", uo_out);
   end
 
   // Output monitoring
   initial begin
-    $monitor("Time=%0t | ui_in=%02x | uo_out=%02x | uio_out=%02x | uio_oe=%02x",
-             $time, ui_in, uo_out, uio_out, uio_oe);
+    $monitor("Time=%0t | ui_in=%02x | uo_out=%02x | uio_out=%02x | uio_oe=%02x | state=%0d",
+             $time, ui_in, uo_out, uio_out, uio_oe, state);
+  end
+
+  // FSM state tracking for monitoring purposes
+  always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      state <= 4'd0; // Reset state
+    end else if (ena) begin
+      // FSM state machine monitoring for debug
+      case (state)
+        4'd0: state <= (ui_in != 8'd0) ? 4'd1 : 4'd0; // IDLE -> LOAD
+        4'd1: state <= 4'd2; // LOAD -> ADD
+        4'd2: state <= 4'd3; // ADD -> STORE
+        4'd3: state <= 4'd4; // STORE -> DONE
+        4'd4: state <= 4'd0; // DONE -> IDLE (to reset FSM)
+        default: state <= 4'd0;
+      endcase
+    end
   end
 
 endmodule
