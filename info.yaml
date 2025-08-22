@@ -1,14 +1,14 @@
 project:
-  title:        "Simple-ALU"
+  title:        "Simple-ALU-FSM"
   author:       "Your Name"
   discord:      ""
-  description:  "Simple 8-bit ALU with ADD, SUB, AND operations"
+  description:  "FSM-based ALU with basic control and arithmetic operations"
   language:     "Verilog"
-  clock_hz:     100
+  clock_hz:     50MHz
   tiles:        "1x1"
-  top_module:   "tt_um_mac"
+  top_module:   "tt_um_alu_fsm"
   source_files:
-    - "tt_um_mac.v"
+    - "tt_um_alu_fsm.v"
 
 pinout:
   ui[0]: "ui_in[0]"
