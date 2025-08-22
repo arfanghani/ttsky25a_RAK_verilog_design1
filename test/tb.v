@@ -21,6 +21,10 @@ module tb ();
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
 
+  // Debug signals
+  wire [7:0] acc_debug;
+  wire [3:0] state_debug;
+
   // Gate-level power pins
 `ifdef GL_TEST
   wire VPWR = 1'b1;
@@ -40,7 +44,10 @@ module tb ();
     .uio_oe(uio_oe),
     .ena(ena),
     .clk(clk),
-    .rst_n(rst_n)
+    .rst_n(rst_n),
+    // Connect debug outputs
+    .acc_debug(acc_debug),
+    .state_debug(state_debug)
   );
 
   // Drive wires from regs
@@ -58,35 +65,50 @@ module tb ();
     rst_n = 0;
     ena = 1;
     ui_in_reg = 8'b00000000;
-    uio_in_reg = 8'b00000000;
+    uio_in_reg = 8'b00000000;  // Set initial value for uio_in_reg
     #10;
     rst_n = 1;
 
-    // Apply input combinations: [2]=Cin, [1]=B, [0]=A
-    ui_in_reg = 8'b00000000;  // A=0, B=0, Cin=0 => Sum=0, Cout=0
-    #20;
-    ui_in_reg = 8'b00000001;  // A=1, B=0, Cin=0 => Sum=1, Cout=0
-    #20;
-    ui_in_reg = 8'b00000011;  // A=1, B=1, Cin=0 => Sum=0, Cout=1
-    #20;
-    ui_in_reg = 8'b00000111;  // A=1, B=1, Cin=1 => Sum=1, Cout=1
-    #20;
-    ui_in_reg = 8'b00000110;  // A=0, B=1, Cin=1 => Sum=0, Cout=1
-    #20;
-    ui_in_reg = 8'b00000100;  // A=0, B=0, Cin=1 => Sum=1, Cout=0
-    #20;
-    ui_in_reg = 8'b00000010;  // A=0, B=1, Cin=0 => Sum=1, Cout=0
-    #20;
-    ui_in_reg = 8'b00000101;  // A=1, B=0, Cin=1 => Sum=0, Cout=1
-    #20;
-
+    // Example input program stimulus
+    ui_in_reg = 8'h41;
+    uio_in_reg = 8'hFF;  // Example value for uio_in
     #10;
+    ui_in_reg = 8'h42;
+    uio_in_reg = 8'hAA;  // Set uio_in value
+    #10;
+    ui_in_reg = 8'h81;
+    uio_in_reg = 8'h55;  // Set uio_in value
+    #10;
+    ui_in_reg = 8'h82;
+    uio_in_reg = 8'h11;  // Set uio_in value
+    #10;
+    ui_in_reg = 8'hC0;
+    uio_in_reg = 8'h22;  // Set uio_in value
+    #10;
+    ui_in_reg = 8'h44;
+    uio_in_reg = 8'h33;  // Set uio_in value
+    #10;
+    ui_in_reg = 8'h83;
+    uio_in_reg = 8'h44;  // Set uio_in value
+    #10;
+    ui_in_reg = 8'hC0;
+    uio_in_reg = 8'h55;  // Set uio_in value
+    #10;
+    ui_in_reg = 8'h00;
+    uio_in_reg = 8'h00;  // Set uio_in value
+    #10;
+    ui_in_reg = 8'h00;
+    uio_in_reg = 8'h00;  // Set uio_in value
+    #20;  // Wait extra cycles to allow simulator to finish
+
+    //$display("Simulation finished. Final uo_out: %02x", uo_out);
     $stop;
   end
 
   // Output monitoring
   initial begin
-    $monitor("Time=%0t | ui_in=%08b | uo_out=%08b", $time, ui_in, uo_out);
+    $monitor("Time=%0t | ui_in=%02x | uo_out=%02x | uio_out=%02x | uio_oe=%02x | acc_debug=%02x | state_debug=%01x",
+             $time, ui_in, uo_out, uio_out, uio_oe, acc_debug, state_debug);
   end
 
 endmodule
