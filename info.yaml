@@ -1,6 +1,6 @@
 project:
   title:        "Simple-ALU-FSM"
-  author:       "Your Name"
+  author:       "AG_RAK"
   discord:      ""
   description:  "FSM-based ALU with basic control and arithmetic operations"
   language:     "Verilog"
