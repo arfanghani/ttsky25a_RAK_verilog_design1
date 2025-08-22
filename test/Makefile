@@ -1,10 +1,10 @@
-# Makefile for tt_um_mac Cocotb simulation
+# Makefile for tt_um_alu_fsm Cocotb simulation
 
 # defaults
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = tt_um_mac.v
+PROJECT_SOURCES = tt_um_alu_fsm.v
 
 ifneq ($(GATES),yes)
 
