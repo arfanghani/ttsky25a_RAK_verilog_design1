@@ -7,150 +7,47 @@ You can also include images in this folder and reference them in the markdown. E
 512 kb in size, and the combined size of all images must be less than 1 MB.
 -->
 
-## How it works
-
-# Pipelined 8-bit ALU (4-bit operands)
+# Finite State Machine (FSM)
 
 ## Credits
-We gratefully acknowledge the Department of CSE. 
+- Department of CSE
 
-## How it works
-The `tt_um_alu` module implements a **pipelined 8-bit ALU** for Tiny Tapeout projects. It uses 4-bit operands `A` and `B` with a 3-bit opcode to select operations. The ALU includes a **two-stage pipeline** for fast and stable output.
+## How it Works
+This design implements a **Finite State Machine (FSM)** with the following components:
 
-### Input and Output Ports
-- **Inputs:**
-  - `ui_in[7:5]` (3-bit opcode)
-  - `ui_in[3:0]` (operand A)
-  - `uio_in[3:0]` (operand B)
-  - `clk` (1-bit clock)
-  - `rst_n` (active-low reset)
-  - `ena` (enable, always 1)
-- **Outputs:**
-  - `uo_out[7:0]` (ALU result)
-  - `uio_oe[7:0]` (set to 0, inputs only)
-  - `uio_out[7:0]` (not used)
+### States:
+- `State 0`: Initial state
+- `State 1`: Intermediate state
+- `State 2`: Intermediate state
+- `State 3`: Final state
 
-## Supported Operations
-| Opcode | Operation | Description |
-|--------|-----------|-------------|
-| 000    | ADD       | `{0,A} + {0,B}` |
-| 001    | SUB       | `{0,A} - {0,B}` |
-| 010    | AND       | `A & B` |
-| 011    | OR        | `A | B` |
-| 100    | XOR       | `A ^ B` |
-| 101    | MUL       | `A * B` (4×4 → 8-bit) |
-| 110    | SHL1      | `{0,A} << 1` |
-| 111    | CMP       | `(A >= B) ? 1 : 0` |
+### Inputs:
+- `clk` (clock)
+- `rst_n` (active-low reset)
+- `input_signal` (controls state transitions)
+- `enable` (enables transitions)
 
-## Internal Architecture
-1. **Stage 1 (Combinational ALU):** Computes result according to opcode.
-2. **Stage 2 (Pipeline Register):** Holds stage1 output for one clock cycle.
-3. **Stage 3 (Output Register):** Final pipeline stage to drive `uo_out`.
+### Outputs:
+- `state_out` (current state)
+- `output_signal` (based on state)
 
-`uio_in` is used only as operand B. Bidirectional pins are not driven (`uio_oe=0`).
+### State Transitions:
+Transitions occur on the rising edge of `clk` when `enable` is active. Reset (`rst_n`) brings the FSM back to `State 0`.
 
 ## Reset Behavior
-- When `rst_n` is low:
-  - Pipeline registers are cleared to `0x00`
-  - Output `uo_out` is `0x00`
+- When `rst_n` is low, FSM resets to `State 0`.
 
 ## How to Test
-Use the provided **Verilog testbench** (`tb.v`) or **cocotb Python test** (`test.py`).
+Use the provided **Verilog testbench** (`tb_fsm.v`) or **Cocotb Python test** (`test_fsm.py`).
 
-### Example Test Scenarios (expected `uo_out` after 2 clock cycles)
-| OP  | A  | B  | Result |
-|-----|----|----|--------|
-| 000 | 3  | 2  | 5      |
-| 101 | 4  | 3  | 12     |
-| 001 | 9  | 3  | 6      |
-| 100 | 5  | 10 | 15     |
-| 110 | 7  | –  | 14     |
-| 111 | 8  | 12 | 0      |
-| 111 | 12 | 8  | 1      |
+### Example Test Scenarios:
+| Initial State | input_signal | Expected Output Signal | Final State |
+|---------------|--------------|------------------------|-------------|
+| State 0       | 1            | 0                      | State 1     |
+| State 1       | 0            | 0                      | State 2     |
+| State 2       | 1            | 1                      | State 3     |
+| State 3       | 0            | 0                      | State 0     |
 
-### Monitoring Output
-The testbench prints a trace of inputs and results:
-```verilog
-initial begin
-    $monitor("Time=%0t | ui_in=%b (OP=%b A=%0d) | uio_in=%b (B=%0d) | uo_out=%0d",
-        $time, ui_in, ui_in[7:5], ui_in[3:0], uio_in, uio_in[3:0], uo_out);
-end
-
-
-## How to test
-
-Use the provided **Verilog testbench** (`tb.v`) or **cocotb Python test** (`test.py`).
-
-### Example Test Scenarios (expected `uo_out` after 2 clock cycles)
-| OP  | A  | B  | Result |
-|-----|----|----|--------|
-| 000 | 3  | 2  | 5      |
-| 101 | 4  | 3  | 12     |
-| 001 | 9  | 3  | 6      |
-| 100 | 5  | 10 | 15     |
-| 110 | 7  | –  | 14     |
-| 111 | 8  | 12 | 0      |
-| 111 | 12 | 8  | 1      |
-
-### Monitoring Output
-The testbench prints a trace of inputs and results:
-```verilog
-initial begin
-    $monitor("Time=%0t | ui_in=%b (OP=%b A=%0d) | uio_in=%b (B=%0d) | uo_out=%0d",
-        $time, ui_in, ui_in[7:5], ui_in[3:0], uio_in, uio_in[3:0], uo_out);
-end
-
-## External hardware
-
-
----
-
-## `docs/info.md`
-
-# Pipelined 8-bit ALU (4-bit operands)
-
-## Credits
-
-
-## How it works
-This design implements a **two-stage pipelined ALU**:
-- **Operands:** `A = ui_in[3:0]`, `B = uio_in[3:0]`
-- **Opcode:** `ui_in[7:5]`
-- **Outputs:** `uo_out[7:0]`
-- **Latency:** 2 cycles from input change to valid output.
-
-### Operations
-- **000 – ADD:** `{0,A} + {0,B}`
-- **001 – SUB:** `{0,A} - {0,B}` (wraps in 8-bit unsigned)
-- **010 – AND:** `A & B`
-- **011 – OR:** `A | B`
-- **100 – XOR:** `A ^ B`
-- **101 – MUL:** `A * B` (4×4 → 8-bit)
-- **110 – SHL1:** `({0,A} << 1)`
-- **111 – CMP:** `A ≥ B ? 1 : 0`
-
-`uio_oe` is held at `0x00` (bidirectional pins used as inputs only). `uio_out` is `0x00`.
-
-## Reset behavior
-Active-low `rst_n` clears pipeline registers to `0x00`.
-
-## How to test
-Use the provided **cocotb** test (`test/test.py`) or the **Verilog** testbench (`test/tb.v`).
-
-### Example scenarios (expect values after 2 clock cycles)
-| OP  | A  | B  | Result |
-|-----|----|----|--------|
-| 000 | 3  | 2  | 5      |
-| 101 | 4  | 3  | 12     |
-| 001 | 9  | 3  | 6      |
-| 100 | 5  | 10 | 15     |
-| 110 | 7  | –  | 14     |
-| 111 | 8  | 12 | 0      |
-| 111 | 12 | 8  | 1      |
-
-To view waveforms:
-```bash
-cd test
-make -B
-gtkwave tb.vcd
+## External Hardware
+The FSM can be used in larger systems to control operations based on state transitions.
 
