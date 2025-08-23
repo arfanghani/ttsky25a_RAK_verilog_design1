@@ -13,6 +13,9 @@ module tt_um_alu_fsm (
   reg [7:0] acc;
   reg [3:0] state;
 
+  // Dummy wire to mark uio_in as used (prevents verilator UNUSEDSIGNAL warning)
+  wire [7:0] unused_uio_in = uio_in;
+
   // Simple example FSM states
   localparam IDLE  = 4'd0;
   localparam LOAD  = 4'd1;
